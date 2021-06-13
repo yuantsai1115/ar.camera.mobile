@@ -69,7 +69,7 @@ class ARButton {
 
 		function disableButton() {
 			button.id = "ARButton";
-			button.style.display = '';
+			button.style.display = 'block';
 
 			button.style.cursor = 'auto';
 			button.style.left = 'calc(50% - 75px)';

@@ -61,6 +61,13 @@ body {
     display: none;
   }
 
+  #photo-select{
+    position: absolute;
+    bottom: 135px;
+    left: 20px;
+    height: 35px;
+  }
+
   #place-pos-check{
     position: absolute;
     bottom: 35px;
