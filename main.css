@@ -61,6 +61,20 @@ body {
     display: none;
   }
 
+  #place-pos-check{
+    position: absolute;
+    bottom: 35px;
+    left: 5px;
+    height: 35px;
+  }
+
+  #place-pos-label{
+    position: absolute;
+    bottom: 15px;
+    left: 30px;
+    height: 35px;
+  }
+
   #pos-text{
     position: absolute;
     bottom: 110px;

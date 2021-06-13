@@ -28,10 +28,12 @@
 
 		<span style="font-size:30px;cursor:pointer;position: absolute;" onclick="openNav()">&#9776;</span>
 		<span id="log-text"> text </span>
-
+		<img id="photo-img" hidden/>
 
 		<button type="button" id="place-button">PLACE</button>
 		<button type="button" id="camera-position">CAM POS</button>
+		<input type="checkbox" id="place-pos-check" checked>
+		<p id="place-pos-label">surface pos</p>
 		<span id="pos-text"> position </span>
 
 
@@ -76,9 +78,10 @@
 
 		var cameraMatrix;
 		var cameraPosition = new THREE.Vector3();
+		var isSentPlacePos = false;
 
 		var websocketConnection;
-		let isWebsocketConnected = false;
+		let isWebsocketConnected = document.getElementById("place-pos-check").checked;
 		const WEBSOCKET_INTERVAL = 500;
 		let websocketTimestamp = 0;
 
@@ -113,6 +116,11 @@
 
 		$("#camera-position").click(function () {
 			showPosition();
+			takePhoto();
+		});
+
+		$("#place-pos-check").click(function () {
+			checkPlacePos();
 		});
 
 		function arPlace() {
@@ -132,6 +140,19 @@
 			if (cameraMatrix) {
 				cameraPosition.setFromMatrixPosition({ "elements": Object.values(cameraMatrix) });
 				$("#pos-text").text(JSON.stringify(cameraPosition));
+			}
+		}
+
+		function takePhoto() {
+			
+		}
+
+		function checkPlacePos() {
+			let placeCheckBox = document.getElementById("place-pos-check");
+			if (placeCheckBox.checked == true) {
+				isSentPlacePos = true;
+			} else {
+				isSentPlacePos = false;
 			}
 		}
 
@@ -272,10 +293,10 @@
 				viewer.closeDialog();
 				document.getElementById("camera-position").setAttribute("modelId", currentModel.modelId);
 				document.getElementById("ARButton").hidden = false;
-				websocketConnection = new WebSocket(`wss://gbcrwksd0d.execute-api.us-east-1.amazonaws.com/dev${"/?mid="+currentModel.modelId}&device=1`);
+				websocketConnection = new WebSocket(`wss://gbcrwksd0d.execute-api.us-east-1.amazonaws.com/dev${"/?mid=" + currentModel.modelId}&device=1`);
 				websocketConnection.onopen = (e) => {
 					console.log("Connected to websocket.");
-					websocketConnection.send(JSON.stringify({message: `AR Camera connected.`, modelId: currentModel.modelId}));
+					websocketConnection.send(JSON.stringify({ message: `AR Camera connected.`, modelId: currentModel.modelId }));
 					isWebsocketConnected = true;
 				};
 			};
@@ -353,11 +374,11 @@
 					$("#log-text").text(JSON.stringify(cameraPosition));
 				}
 
-				if (isWebsocketConnected) { 
-					if(timestamp-websocketTimestamp > WEBSOCKET_INTERVAL){
+				if (isWebsocketConnected && isSentPlacePos == false) {
+					if (timestamp - websocketTimestamp > WEBSOCKET_INTERVAL) {
 						let position = cameraPosition;
 						let modelId = document.getElementById("camera-position").getAttribute("modelId");
-						websocketConnection.send(JSON.stringify({position: position, modelId: modelId}));
+						websocketConnection.send(JSON.stringify({ position: position, modelId: modelId }));
 						websocketTimestamp = timestamp;
 					}
 				}
@@ -407,6 +428,13 @@
 
 						reticle.visible = true;
 						reticle.matrix.fromArray(hit.getPose(referenceSpace).transform.matrix);
+
+						if (isSentPlacePos == true) {
+							let reticlePosition = new THREE.Vector3(0, 0, 0);
+							reticlePosition.setFromMatrixPosition(reticle.matrix);
+							let modelId = document.getElementById("camera-position").getAttribute("modelId");
+							websocketConnection.send(JSON.stringify({ position: reticlePosition, modelId: modelId }));
+						}
 
 					} else {
 
