@@ -28,7 +28,8 @@
 
 		<span style="font-size:30px;cursor:pointer;position: absolute;" onclick="openNav()">&#9776;</span>
 		<span id="log-text"> text </span>
-		<img id="photo-img" hidden/>
+		<canvas id="photo-img" style="background-color: coral; position: absolute; border: 5px solid black;" hidden></canvas>
+		<video autoplay id="video" style="border: 5px solid black;"></video>
 
 		<button type="button" id="place-button">PLACE</button>
 		<button type="button" id="camera-position">CAM POS</button>
@@ -84,6 +85,8 @@
 		let isWebsocketConnected = document.getElementById("place-pos-check").checked;
 		const WEBSOCKET_INTERVAL = 500;
 		let websocketTimestamp = 0;
+
+		let videoStream;
 
 		init();
 		initBimu();
@@ -144,7 +147,14 @@
 		}
 
 		function takePhoto() {
-			
+			//let canvas = document.querySelector("#photo-img");
+			let canvas = document.getElementById("photo-img");
+			let video = document.getElementById("container");
+			let img = document.createElement("img");
+			canvas.width = 300;//video.offsetWidth;
+			canvas.height = 300;//video.offsetHeight;
+			canvas.getContext("2d").drawImage(video, 0, 0);
+			img.src = canvas.toDataURL("image/png");
 		}
 
 		function checkPlacePos() {
@@ -384,7 +394,7 @@
 				}
 
 				if (hitTestSourceRequested === false) {
-
+					initPhoto();
 					session.requestReferenceSpace('viewer').then(function (referenceSpace) {
 
 						session.requestHitTestSource({ space: referenceSpace }).then(function (source) {
@@ -452,6 +462,43 @@
 
 		}
 
+		async function initPhoto() {
+			if (
+				!"mediaDevices" in navigator ||
+				!"getUserMedia" in navigator.mediaDevices
+			) {
+				alert("Camera API is not available in your browser");
+				return;
+			}
+			else {
+				console.log("Accessed Camera");
+			}
+
+			const video = document.querySelector("#video");
+
+			let constraints = {
+				video: {
+					width: {
+						min: 200,//1280,
+						ideal: 200,//1920,
+						max: 200,//2560,
+					},
+					height: {
+						min: 200,//720,
+						ideal: 200,//1080,
+						max: 200,//1440,
+					},
+					facingMode: "user"
+				},
+			};
+			try {
+				videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+				video.srcObject = videoStream;
+			} catch (error) {
+				alert("Could not access the camera");
+			}
+			video.play();
+		}
 	</script>
 </body>
 
